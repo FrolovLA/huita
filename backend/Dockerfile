@@ -2,7 +2,6 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# ffmpeg + зависимости для OpenCV
 RUN apt-get update && apt-get install -y \
     ffmpeg libgl1 libglib2.0-0 && \
     rm -rf /var/lib/apt/lists/*
