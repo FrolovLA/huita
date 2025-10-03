@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import "./styles.css";
 
 function TimelineOverlay({ videoRef, removed }) {
     const [progress, setProgress] = useState(0);
@@ -20,44 +21,21 @@ function TimelineOverlay({ videoRef, removed }) {
     const duration = videoRef.current.duration;
 
     return (
-        <div
-            style={{
-                position: "absolute",
-                bottom: "19px",
-                left: "16px",
-                right: "16px",
-                height: "6px",
-                borderRadius: "3px",
-                background: "rgba(0,0,0,0.2)",
-                pointerEvents: "none",
-            }}
-        >
+        <div className="timeline-overlay">
             {removed.map((seg, i) => {
                 const left = (seg.start / duration) * 100;
                 const width = ((seg.end - seg.start) / duration) * 100;
                 return (
                     <div
                         key={i}
-                        style={{
-                            position: "absolute",
-                            left: `${left}%`,
-                            width: `${width}%`,
-                            height: "100%",
-                            background: "rgba(255,0,0,0.7)",
-                        }}
+                        className="timeline-segment"
+                        style={{ left: `${left}%`, width: `${width}%` }}
                     />
                 );
             })}
             <div
-                style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: `${progress}%`,
-                    height: "100%",
-                    background: "limegreen",
-                    borderRadius: "3px",
-                }}
+                className="timeline-progress"
+                style={{ width: `${progress}%` }}
             />
         </div>
     );
@@ -98,37 +76,22 @@ export default function App() {
     };
 
     return (
-        <div style={{ maxWidth: "900px", margin: "0 auto", padding: "20px", fontFamily: "sans-serif" }}>
-            <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
-                🎬 Удаление пустых частей из видео
-            </h2>
+        <div className="app">
+            <h2>🎬 Удаление пустых частей из видео</h2>
 
             {/* Панель настроек */}
-            <div
-                style={{
-                    padding: "20px",
-                    borderRadius: "10px",
-                    border: "1px solid #ddd",
-                    background: "#f9f9f9",
-                    marginBottom: "20px",
-                }}
-            >
-                <div style={{ marginBottom: "15px" }}>
-                    <label style={{ fontWeight: "600", display: "block", marginBottom: "6px" }}>
-                        Загрузите видео
-                    </label>
+            <div className="settings">
+                <div>
+                    <label>Загрузите видео</label>
                     <input type="file" onChange={(e) => setFile(e.target.files[0])} />
                 </div>
 
-                <div style={{ marginBottom: "15px" }}>
-                    <label style={{ fontWeight: "600", display: "block", marginBottom: "6px" }}>
-                        Минимальный размер объекта (0.01 - 1)
-                    </label>
+                <div>
+                    <label>Минимальный размер объекта (0.01 - 1)</label>
                     <input
                         type="number"
                         value={minArea}
                         step="0.01"
-                        style={{ width: "120px", padding: "5px" }}
                         onChange={(e) => {
                             let val = parseFloat(e.target.value);
                             if (isNaN(val)) val = 0.01;
@@ -139,15 +102,12 @@ export default function App() {
                     />
                 </div>
 
-                <div style={{ marginBottom: "15px" }}>
-                    <label style={{ fontWeight: "600", display: "block", marginBottom: "6px" }}>
-                        Максимальный размер объекта (0.01 - 1)
-                    </label>
+                <div>
+                    <label>Максимальный размер объекта (0.01 - 1)</label>
                     <input
                         type="number"
                         value={maxArea}
                         step="0.01"
-                        style={{ width: "120px", padding: "5px" }}
                         onChange={(e) => {
                             let val = parseFloat(e.target.value);
                             if (isNaN(val)) val = 0.01;
@@ -158,14 +118,11 @@ export default function App() {
                     />
                 </div>
 
-                <div style={{ marginBottom: "20px" }}>
-                    <label style={{ fontWeight: "600", display: "block", marginBottom: "6px" }}>
-                        Количество кадров пропуска (1 - 140)
-                    </label>
+                <div>
+                    <label>Количество кадров пропуска (1 - 140)</label>
                     <input
                         type="number"
                         value={skipFrames}
-                        style={{ width: "120px", padding: "5px" }}
                         onChange={(e) => {
                             let val = parseInt(e.target.value);
                             if (isNaN(val)) val = 1;
@@ -179,15 +136,7 @@ export default function App() {
                 <button
                     onClick={handleUpload}
                     disabled={loading}
-                    style={{
-                        padding: "10px 20px",
-                        borderRadius: "6px",
-                        border: "none",
-                        background: loading ? "#999" : "#007bff",
-                        color: "white",
-                        fontWeight: "600",
-                        cursor: loading ? "default" : "pointer",
-                    }}
+                    className="upload-btn"
                 >
                     {loading ? "⏳ Обработка..." : "Начать обработку"}
                 </button>
@@ -195,19 +144,14 @@ export default function App() {
 
             {/* Видео оригинал */}
             {file && (
-                <div style={{ marginBottom: "30px" }}>
-                    <h3 style={{ marginBottom: "10px" }}>Исходное видео</h3>
-                    <div style={{ position: "relative", display: "inline-block" }}>
+                <div className="video-container">
+                    <h3>Исходное видео</h3>
+                    <div className="video-box">
                         <video
                             ref={originalVideoRef}
                             src={URL.createObjectURL(file)}
                             controls
                             width="640"
-                            style={{
-                                display: "block",
-                                borderRadius: "10px",
-                                boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-                            }}
                         />
                         <TimelineOverlay videoRef={originalVideoRef} removed={segments} />
                     </div>
@@ -217,23 +161,9 @@ export default function App() {
             {/* Результат */}
             {resultUrl && (
                 <div>
-                    <h3 style={{ marginBottom: "10px" }}>Результат</h3>
-                    <video
-                        controls
-                        width="640"
-                        src={resultUrl}
-                        style={{
-                            display: "block",
-                            borderRadius: "10px",
-                            boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-                            marginBottom: "10px",
-                        }}
-                    />
-                    <a
-                        href={resultUrl}
-                        download="result.mp4"
-                        style={{ color: "#007bff", fontWeight: "600" }}
-                    >
+                    <h3>Результат</h3>
+                    <video controls width="640" src={resultUrl} />
+                    <a href={resultUrl} download="result.mp4" className="download-link">
                         ⬇️ Скачать результат
                     </a>
                 </div>

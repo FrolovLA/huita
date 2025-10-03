@@ -1,0 +1,97 @@
+.app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: sans-serif;
+}
+
+.app h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Панель настроек */
+.settings {
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    margin-bottom: 20px;
+}
+
+.settings label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.settings input[type="number"],
+.settings input[type="file"] {
+    width: 120px;
+    padding: 5px;
+}
+
+.settings .upload-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    background: #007bff;
+}
+
+.settings .upload-btn:disabled {
+    background: #999;
+    cursor: default;
+}
+
+/* Видео контейнеры */
+.video-container {
+    margin-bottom: 30px;
+}
+
+.video-box {
+    position: relative;
+    display: inline-block;
+}
+
+.video-box video {
+    display: block;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Таймлайн */
+.timeline-overlay {
+    position: absolute;
+    bottom: 19px;
+    left: 16px;
+    right: 16px;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.2);
+    pointer-events: none;
+}
+
+.timeline-segment {
+    position: absolute;
+    height: 100%;
+    background: rgba(255,0,0,0.7);
+}
+
+.timeline-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: limegreen;
+    border-radius: 3px;
+}
+
+/* Ссылка на скачивание */
+.download-link {
+    color: #007bff;
+    font-weight: 600;
+}
