@@ -1,45 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useRef } from "react";
 import "./styles.css";
-
-function TimelineOverlay({ videoRef, removed }) {
-    const [progress, setProgress] = useState(0);
-
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        const updateProgress = () => {
-            setProgress((video.currentTime / video.duration) * 100);
-        };
-
-        video.addEventListener("timeupdate", updateProgress);
-        return () => video.removeEventListener("timeupdate", updateProgress);
-    }, [videoRef]);
-
-    if (!videoRef.current || !videoRef.current.duration) return null;
-    const duration = videoRef.current.duration;
-
-    return (
-        <div className="timeline-overlay">
-            {removed.map((seg, i) => {
-                const left = (seg.start / duration) * 100;
-                const width = ((seg.end - seg.start) / duration) * 100;
-                return (
-                    <div
-                        key={i}
-                        className="timeline-segment"
-                        style={{ left: `${left}%`, width: `${width}%` }}
-                    />
-                );
-            })}
-            <div
-                className="timeline-progress"
-                style={{ width: `${progress}%` }}
-            />
-        </div>
-    );
-}
+import { getFields, handleUpload } from "./utils";
+import { UploadButton } from "./uploadButton";
+import { VideoPlayer } from "./videoBlock";
+import { ResultVideo } from "./resultVideo";
 
 export default function App() {
     const [file, setFile] = useState(null);
@@ -49,35 +13,28 @@ export default function App() {
     const [skipFrames, setSkipFrames] = useState(10);
     const [loading, setLoading] = useState(false);
     const [segments, setSegments] = useState([]);
+    const [error, setError] = useState(""); // новое состояние для ошибок
 
+    const fields = getFields({ minArea, setMinArea, maxArea, setMaxArea, skipFrames, setSkipFrames });
     const originalVideoRef = useRef(null);
 
-    const handleUpload = async () => {
-        if (!file) return;
-        setLoading(true);
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("min_area_ratio", minArea);
-        formData.append("max_area_ratio", maxArea);
-        formData.append("skip_frames", skipFrames);
-
-        try {
-            const res = await axios.post("http://localhost:8000/process_video/", formData, {
-                timeout: 5 * 60 * 1000,
-            });
-            setResultUrl(`http://localhost:8000${res.data.result_video}`);
-            setSegments(res.data.removed_segments || []);
-        } catch (err) {
-            console.error(err);
-            alert("Ошибка при обработке видео");
-        } finally {
-            setLoading(false);
-        }
+    const handleUploadWrapper = async () => {
+        setError(""); // сброс ошибки перед загрузкой
+        await handleUpload({
+            file,
+            minArea,
+            maxArea,
+            skipFrames,
+            setLoading,
+            setResultUrl,
+            setSegments,
+            setError, // прокидываем setError в хендлер
+        });
     };
 
     return (
         <div className="app">
-            <h2>🎬 Удаление пустых частей из видео</h2>
+            <h2>Удаление пустых частей из видео</h2>
 
             {/* Панель настроек */}
             <div className="settings">
@@ -86,88 +43,28 @@ export default function App() {
                     <input type="file" onChange={(e) => setFile(e.target.files[0])} />
                 </div>
 
-                <div>
-                    <label>Минимальный размер объекта (0.01 - 1)</label>
-                    <input
-                        type="number"
-                        value={minArea}
-                        step="0.01"
-                        onChange={(e) => {
-                            let val = parseFloat(e.target.value);
-                            if (isNaN(val)) val = 0.01;
-                            if (val < 0.01) val = 0.01;
-                            if (val > 1) val = 1;
-                            setMinArea(val);
-                        }}
-                    />
-                </div>
+                {fields.map((f, i) => (
+                    <div key={i}>
+                        <label>{f.label}</label>
+                        <input
+                            type={f.type}
+                            value={f.value}
+                            step={f.step}
+                            onChange={(e) => f.setter(f.clamp(e.target.value))}
+                        />
+                    </div>
+                ))}
 
-                <div>
-                    <label>Максимальный размер объекта (0.01 - 1)</label>
-                    <input
-                        type="number"
-                        value={maxArea}
-                        step="0.01"
-                        onChange={(e) => {
-                            let val = parseFloat(e.target.value);
-                            if (isNaN(val)) val = 0.01;
-                            if (val < 0.01) val = 0.01;
-                            if (val > 1) val = 1;
-                            setMaxArea(val);
-                        }}
-                    />
-                </div>
+                <UploadButton onClick={handleUploadWrapper} loading={loading} />
 
-                <div>
-                    <label>Количество кадров пропуска (1 - 140)</label>
-                    <input
-                        type="number"
-                        value={skipFrames}
-                        onChange={(e) => {
-                            let val = parseInt(e.target.value);
-                            if (isNaN(val)) val = 1;
-                            if (val > 140) val = 140;
-                            if (val < 1) val = 1;
-                            setSkipFrames(val);
-                        }}
-                    />
-                </div>
-
-                <button
-                    onClick={handleUpload}
-                    disabled={loading}
-                    className="upload-btn"
-                >
-                    {loading ? "⏳ Обработка..." : "Начать обработку"}
-                </button>
+                {error && <div className="error-message">{error}</div>} {/* блок для ошибок */}
             </div>
 
-            {/* Видео оригинал */}
             {file && (
-                <div className="video-container">
-                    <h3>Исходное видео</h3>
-                    <div className="video-box">
-                        <video
-                            ref={originalVideoRef}
-                            src={URL.createObjectURL(file)}
-                            controls
-                            width="640"
-                        />
-                        <TimelineOverlay videoRef={originalVideoRef} removed={segments} />
-                    </div>
-                </div>
+                <VideoPlayer src={URL.createObjectURL(file)} refVideo={originalVideoRef} segments={segments} />
             )}
 
-            {/* Результат */}
-            {resultUrl && (
-                <div>
-                    <h3>Результат</h3>
-                    <video controls width="640" src={resultUrl} />
-                    <a href={resultUrl} download="result.mp4" className="download-link">
-                        ⬇️ Скачать результат
-                    </a>
-                </div>
-            )}
+            {resultUrl && <ResultVideo src={resultUrl} />}
         </div>
     );
 }
